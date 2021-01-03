@@ -70,31 +70,14 @@ this.initialDialogId = WATERFALL_DIALOG;
             
         step.values.name = step.result
         return await step.prompt(TEXT_PROMPT, 'Provide details of the issue you face?');
-    }
+    }         
         
-    // async getDate(step){
-    
-    //     step.values.noOfParticipants = step.result
-    
-    //     return await step.prompt(DATETIME_PROMPT, 'On which date you want to make the reservation?')
-    // }
-        
-    // async getTime(step){
-    
-    //     step.values.date = step.result
-    
-    //     return await step.prompt(DATETIME_PROMPT, 'At what time?')
-    // }
-        
-        
-    async confirmStep(step){
-    
+    async confirmStep(step){    
         step.values.issue = step.result
         var msg = ` You have entered following values: \n Name: ${step.values.name}\n Issue: ${step.values.issue}`
         await step.context.sendActivity(msg);
         return await step.prompt(CONFIRM_PROMPT, 'Are you sure that all values are correct and you want to create an incident?', ['yes', 'no']);
-    }
-        
+    }        
     async summaryStep(step){
         if(step.result===true)
         {
@@ -102,14 +85,14 @@ this.initialDialogId = WATERFALL_DIALOG;
             // Include the request library for Node.js   
             
             //  Basic Authentication credentials   
-            var username = "administrator"; 
-            var password = "administrator";
+            var username = "meapi"; 
+            var password = "admin@123";
 
             var authenticationHeader = "Basic " + new Buffer(username + ":" + password).toString("base64");
            
             let options = {
-                url: "http://localhost:6060/api/v3/requests",
-                headers : { "TECHNICIAN_KEY" : "2A731E57-A8CE-4470-8F72-5BB356E87A5E",
+                url: "https://dev-support.happiestminds.com/api/v3/requests/",
+                headers : { "TECHNICIAN_KEY" : "4476682D-B7C1-4B26-909C-4671A0E46407",
                             "Content-Type" : "application/x-www-form-urlencoded"},
                 form: {
                     input_data : '{"request":{"subject":"'+step.values.issue+'","description":"'+step.values.issue+'","requester":{"name":'+step.values.name+'}}}'
@@ -123,23 +106,16 @@ this.initialDialogId = WATERFALL_DIALOG;
                     let response = JSON.parse(body);
                     inc_id = response.request['id'];
                     console.log(inc_id);
-                    //await step.context.sendActivity("Incident successfully created. Your incident id is : "+inc_id);
+                    await step.context.sendActivity("Incident successfully created. Your incident id is : "+inc_id);
                     
 
                 });
 
-                await new Promise(resolve => setTimeout(async() => resolve(
-                    await step.context.sendActivity("Incident successfully created. Your incident id is : "+inc_id)
-                ), 1000));
+                // await new Promise(resolve => setTimeout(async() => resolve(
+                //     await step.context.sendActivity("Incident successfully created. Your incident id is : "+inc_id)
+                // ), 1000));
                 endDialog = true;
-                await step.endDialog();
-    
-           
-           
-              
-
-            
-            
+                await step.endDialog();          
         
         }
           
