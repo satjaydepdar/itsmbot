@@ -24,7 +24,7 @@ class ResetPasswordDialog extends ComponentDialog {
 		this.addDialog(new ConfirmPrompt(CONFIRM_PROMPT));
 
 		this.addDialog(new WaterfallDialog(WATERFALL_DIALOG, [
-			this.firstStep.bind(this),  // Ask confirmation if user wants to unlock password?
+			// this.firstStep.bind(this),  // Ask confirmation if user wants to unlock password?
 			this.getName.bind(this),    // Get name from user
 			this.getIssue.bind(this),  // Issue details of an incident
 			this.confirmStep.bind(this), // Show summary of values entered by user and ask confirmation to unlock password
@@ -56,11 +56,7 @@ class ResetPasswordDialog extends ComponentDialog {
 	}
 		
 	async getName(step){
-		if(step.result === true)
-		{ 
-		return await step.prompt(TEXT_PROMPT, 'In what name incident for reset password is to be created?');
-		}
-	
+		return await step.prompt(TEXT_PROMPT, 'In what name incident for reset password is to be created?');	
 	}
 		
 	async getIssue(step){

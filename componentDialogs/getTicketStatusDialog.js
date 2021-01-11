@@ -61,15 +61,20 @@ class GetTicketStatusDialog extends ComponentDialog {
 			var username = "meapi"; 
 			var password = "admin@123";
 
-			var authenticationHeader = "Basic " + new Buffer(username + ":" + password).toString("base64");
+			var authenticationHeader = "Basic " + Buffer.from(username + ":" + password).toString("base64");
 			
 			let options = {
 				url: "https://dev-support.happiestminds.com/api/v3/requests/" + step.values.ticketNo,
-				headers : { "TECHNICIAN_KEY" : "4476682D-B7C1-4B26-909C-4671A0E46407"}
+				headers : { "TECHNICIAN_KEY" : "E3E65812-A327-43AC-8E92-5EC52E6820A0"}
 			};
 			var ticketStatus;
 			await request.get(options, async (err, res, body) => {
+				if(err){
+					console.log(err)
+				}
+				console.log(body)
 				let response = JSON.parse(body);
+				console.log(response)
 				if(response.response_status.status == "failed"){
 					ticketStatus = "Ticket ID entered is invalid. Please try again"	
 				}else{
@@ -79,8 +84,8 @@ class GetTicketStatusDialog extends ComponentDialog {
 			});
 			await new Promise(resolve => setTimeout(async() => resolve(
 				await step.context.sendActivity(ticketStatus)
-			), 2000));
-			return await step.prompt(CONFIRM_PROMPT, 'Do you want to try again?', ['yes', 'no']);
+			), 3500));
+			return await step.prompt(CONFIRM_PROMPT, 'Do you want to try again?', ['yes', 'no'])
 		}
 	}
 	async endStep(step){

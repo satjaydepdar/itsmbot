@@ -26,7 +26,7 @@ class ITSMbot extends ActivityHandler {
 		const dispatchRecognizer = new LuisRecognizer({
 			applicationId: process.env.LuisAppId,
 			endpointKey: process.env.LuisAPIKey,
-			endpoint: `https://${ process.env.LuisAPIHostName }.api.cognitive.microsoft.com`
+			endpoint: `https://westus.api.cognitive.microsoft.com:443`
 		}, {
 			includeAllIntents: true
 			
@@ -87,6 +87,10 @@ class ITSMbot extends ActivityHandler {
 		else{
 			if(intent == "Get_Status"){
 				context.activity.text = "Get_Status"
+			}else if(intent == "Reset_Password"){
+				context.activity.text = "Reset_Password"
+			}else if(intent == "Create_Incident"){
+				context.activity.text = "Create_Incident"
 			}
 			currentIntent = context.activity.text;
 			await this.previousIntent.set(context,{intentName: context.activity.text});
@@ -97,13 +101,16 @@ class ITSMbot extends ActivityHandler {
 				await this.conversationData.set(context,{endDialog: false});
 				await this.createIncidentDialog.run(context,this.dialogState);
 				conversationData.endDialog = await this.createIncidentDialog.isDialogComplete();
-				if(conversationData.endDialog){
-					await this.previousIntent.set(context,{intentName: null});
-					await this.sendSuggestedActions(context);
-
+				if(conversationData.endDialog){   
+					await this.previousIntent.set(context,{});
+					var continueVal = await this.createIncidentDialog.continueActions();
+					if(continueVal){
+						await this.previousIntent.set(context,{});
+						await this.sendSuggestedActions(context);
+					}
 				}
 				break;
-			case 'Unlock_Password':
+			case 'Unlock Password':
 				console.log("Inside Unlock Password Case");
 				await this.conversationData.set(context,{endDialog: false});
 				await this.unlockPasswordDialog.run(context,this.dialogState);
@@ -115,7 +122,7 @@ class ITSMbot extends ActivityHandler {
 				}            
 				break;
 
-			case 'Reset Password':
+			case 'Reset_Password':
 				console.log("Inside Reset Password Case");
 				await this.conversationData.set(context,{endDialog: false});
 				await this.resetPasswordDialog.run(context,this.dialogState);

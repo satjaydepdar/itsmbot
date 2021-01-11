@@ -10,34 +10,27 @@ const TEXT_PROMPT      = 'TEXT_PROMPT';
 // const DATETIME_PROMPT  = 'DATETIME_PROMPT';
 const WATERFALL_DIALOG = 'WATERFALL_DIALOG';
 var endDialog ='';
+var continueRes ='';
 
 class CreateIncidentDialog extends ComponentDialog {
     
     constructor(conservsationState,userState) {
-        // cretateIncidentDialog is a dialog id for the class CreateIncidentDialog
         super('createIncidentDialog');
+        this.addDialog(new TextPrompt(TEXT_PROMPT));
+        this.addDialog(new ChoicePrompt(CHOICE_PROMPT));
+        this.addDialog(new ConfirmPrompt(CONFIRM_PROMPT));
 
-this.addDialog(new TextPrompt(TEXT_PROMPT));
-this.addDialog(new ChoicePrompt(CHOICE_PROMPT));
-this.addDialog(new ConfirmPrompt(CONFIRM_PROMPT));
-// this.addDialog(new NumberPrompt(NUMBER_PROMPT,this.noOfParticipantsValidator));
-// this.addDialog(new DateTimePrompt(DATETIME_PROMPT));
+        this.addDialog(new WaterfallDialog(WATERFALL_DIALOG, [
+            // this.firstStep.bind(this),  // Ask confirmation if user wants to create incident request?
+            this.getName.bind(this),    // Get name from user
+            this.getIssue.bind(this),  // Issue details of an incident
+            this.confirmStep.bind(this), // Show summary of values entered by user and ask confirmation to create incident
+            this.summaryStep.bind(this),
+			this.endStep.bind(this)
+        ]));
 
-this.addDialog(new WaterfallDialog(WATERFALL_DIALOG, [
-    this.firstStep.bind(this),  // Ask confirmation if user wants to create incident request?
-    this.getName.bind(this),    // Get name from user
-    this.getIssue.bind(this),  // Issue details of an incident
-    // this.getDate.bind(this), // Date of reservation
-    // this.getTime.bind(this),  // Time of reservation
-    this.confirmStep.bind(this), // Show summary of values entered by user and ask confirmation to create incident
-    this.summaryStep.bind(this)
-           
-]));
-
-this.initialDialogId = WATERFALL_DIALOG;
-
+        this.initialDialogId = WATERFALL_DIALOG;
     }
-// accessor is used to access different properties under dialog state object
     async run(turnContext, accessor) {
         const dialogSet = new DialogSet(accessor);
         dialogSet.add(this);
@@ -51,23 +44,15 @@ this.initialDialogId = WATERFALL_DIALOG;
 
     async firstStep(step) {
         endDialog = false;
-        // Running a prompt here means the next WaterfallStep will be run when the users response is received.
         return await step.prompt(CONFIRM_PROMPT, 'Would you like to create an incident?', ['yes', 'no']);
               
-        }
+    }
         
-    async getName(step){
-            
-        console.log(step.result)
-        if(step.result === true)
-        { 
-        return await step.prompt(TEXT_PROMPT, 'In what name incident is to be created?');
-        }
-    
+    async getName(step){            
+        return await step.prompt(TEXT_PROMPT, 'In what name incident is to be created?');    
     }
         
     async getIssue(step){
-            
         step.values.name = step.result
         return await step.prompt(TEXT_PROMPT, 'Provide details of the issue you face?');
     }         
@@ -79,12 +64,7 @@ this.initialDialogId = WATERFALL_DIALOG;
         return await step.prompt(CONFIRM_PROMPT, 'Are you sure that all values are correct and you want to create an incident?', ['yes', 'no']);
     }        
     async summaryStep(step){
-        if(step.result===true)
-        {
-            // Business 
-            // Include the request library for Node.js   
-            
-            //  Basic Authentication credentials   
+        if(step.result===true){
             var username = "meapi"; 
             var password = "admin@123";
 
@@ -92,39 +72,48 @@ this.initialDialogId = WATERFALL_DIALOG;
            
             let options = {
                 url: "https://dev-support.happiestminds.com/api/v3/requests/",
-                headers : { "TECHNICIAN_KEY" : "4476682D-B7C1-4B26-909C-4671A0E46407",
+                headers : { "TECHNICIAN_KEY" : "E3E65812-A327-43AC-8E92-5EC52E6820A0",
                             "Content-Type" : "application/x-www-form-urlencoded"},
                 form: {
                     input_data : '{"request":{"subject":"'+step.values.issue+'","description":"'+step.values.issue+'","requester":{"name":'+step.values.name+'}}}'
                 }
             };
-
             var inc_id;
-
             await request.post(options, async (err, res, body) => {
-                    //console.log(res);
+                console.log(body)
+                if(err){
+                    console.log(err)
+                }else{
                     let response = JSON.parse(body);
                     inc_id = response.request['id'];
-                    console.log(inc_id);
-                    await step.context.sendActivity("Incident successfully created. Your incident id is : "+inc_id);
-                    
-
-                });
-
-                // await new Promise(resolve => setTimeout(async() => resolve(
-                //     await step.context.sendActivity("Incident successfully created. Your incident id is : "+inc_id)
-                // ), 1000));
-                endDialog = true;
-                await step.endDialog();          
-        
+                    // step.context.sendActivity("Incident successfully created. Your incident id is : "+inc_id);
+                }
+            });
+            await new Promise(resolve => setTimeout(async() => resolve(
+                await step.context.sendActivity("Incident successfully created. Your incident id is : "+inc_id)
+            ), 2000));
+            return await step.prompt(CONFIRM_PROMPT, 'Do you want to try again?', ['yes', 'no'])        
         }
-          
     }
-    
+    async endStep(step){
+        if(step.result===true){            
+                continueRes = true;
+                endDialog = true;
+                return await step.endDialog();                 
+        }else{
+            var msg = `Thank you for using ITSM bot`
+            step.context.sendActivity(msg);
+            continueRes = false;
+            endDialog = true;
+            return await step.endDialog();
+        }
+    }
     async isDialogComplete(){
         return endDialog;
     }
+    async continueActions(){
+        return continueRes;
     }
-        
-    module.exports.CreateIncidentDialog = CreateIncidentDialog;
+}    
+module.exports.CreateIncidentDialog = CreateIncidentDialog;
         
