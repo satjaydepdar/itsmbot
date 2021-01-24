@@ -40,11 +40,7 @@ class GetTicketStatusDialog extends ComponentDialog {
 			await dialogContext.beginDialog(this.id);
 		}
 	}
-	// async get_ticket(step) {
-	// 	endDialog = false;
-	// 	await step.context.sendActivity({text: 'Enter ticket number to get the status:'});
-	// 	return await step.prompt(TEXT_PROMPT, '');
-	// }
+
 	async confirmStep(step){
 	    step.values.ticketNo = ticket_id
 	    var msg = "The Ticket Number entered is: " + step.values.ticketNo
@@ -65,7 +61,7 @@ class GetTicketStatusDialog extends ComponentDialog {
 			
 			let options = {
 				url: "https://dev-support.happiestminds.com/api/v3/requests/" + step.values.ticketNo,
-				headers : { "TECHNICIAN_KEY" : "E3E65812-A327-43AC-8E92-5EC52E6820A0"}
+				headers : { "TECHNICIAN_KEY" : "F3776882-8E92-432B-8FD3-C39A6E7CEB18"}
 			};
 			var ticketStatus;
 			await request.get(options, async (err, res, body) => {

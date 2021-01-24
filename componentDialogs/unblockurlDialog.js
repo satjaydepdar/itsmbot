@@ -11,27 +11,26 @@ const TEXT_PROMPT = 'TEXT_PROMPT';
 const WATERFALL_DIALOG = 'WATERFALL_DIALOG';
 var endDialog = '';
 var continueRes = '';
+var url = ""
 
-class CreateIncidentDialog extends ComponentDialog {
+class UnblockURLDialog extends ComponentDialog {
 
     constructor(conservsationState, userState) {
-        super('createIncidentDialog');
+        super('UnblockURLDialog');
         this.addDialog(new TextPrompt(TEXT_PROMPT));
         this.addDialog(new ChoicePrompt(CHOICE_PROMPT));
         this.addDialog(new ConfirmPrompt(CONFIRM_PROMPT));
 
         this.addDialog(new WaterfallDialog(WATERFALL_DIALOG, [
-            // this.firstStep.bind(this),  // Ask confirmation if user wants to create incident request?
             this.getName.bind(this),    // Get name from user
-            this.getIssue.bind(this),  // Issue details of an incident
-            this.confirmStep.bind(this), // Show summary of values entered by user and ask confirmation to create incident
             this.summaryStep.bind(this),
             this.endStep.bind(this)
         ]));
 
         this.initialDialogId = WATERFALL_DIALOG;
     }
-    async run(turnContext, accessor) {
+    async run(turnContext, accessor, blocked_url) {
+        url = blocked_url
         const dialogSet = new DialogSet(accessor);
         dialogSet.add(this);
 
@@ -42,34 +41,14 @@ class CreateIncidentDialog extends ComponentDialog {
         }
     }
 
-    async firstStep(step) {
-        endDialog = false;
-        return await step.prompt(CONFIRM_PROMPT, 'Would you like to create an incident?', ['yes', 'no']);
-
-    }
-
     async getName(step) {
-        return await step.prompt(TEXT_PROMPT, 'In what name incident is to be created?');
-    }
-
-    async getIssue(step) {
-        step.values.name = step.result
-        return await step.prompt(TEXT_PROMPT, 'Provide details of the issue you face?');
-    }
-
-    async confirmStep(step) {
-        step.values.issue = step.result
-        var msg = ` You have entered following values: \n Name: ${step.values.name}\n Issue: ${step.values.issue}`
-        await step.context.sendActivity(msg);
-        return await step.prompt(CONFIRM_PROMPT, 'Are you sure that all values are correct and you want to create an incident?', ['yes', 'no']);
+        step.values.url = url;
+        var msg = "The URL entered is: " + step.values.url
+	    await step.context.sendActivity(msg);
+	    return await step.prompt(CONFIRM_PROMPT, 'Are you sure you want to unblock this URL?', ['yes', 'no']);
     }
     async summaryStep(step) {
         if (step.result === true) {
-            var username = "meapi";
-            var password = "admin@123";
-
-            var authenticationHeader = "Basic " + new Buffer(username + ":" + password).toString("base64");
-
             let options = {
                 url: "https://dev-support.happiestminds.com/api/v3/requests/",
                 headers: {
@@ -77,7 +56,7 @@ class CreateIncidentDialog extends ComponentDialog {
                     "Content-Type": "application/x-www-form-urlencoded"
                 },
                 form: {
-                    input_data: '{"request":{"subject":"' + step.values.issue + '","description":"' + step.values.issue + '","requester":{"name":' + step.values.name + '}}}'
+                    input_data: '{"request":{"subject":"UnBlock URL","description":"URL: ' + step.values.url + '","requester":{"name":' + step.values.name + '}}}'
                 }
             };
             var inc_id;
@@ -90,12 +69,12 @@ class CreateIncidentDialog extends ComponentDialog {
                 }
             });
             await new Promise(resolve => setTimeout(async () => resolve(
-                await step.context.sendActivity("Incident successfully created. Your incident id is : " + inc_id)
+                await step.context.sendActivity("Incident for unblocking url successfully created. Your incident id is : " + inc_id)
             ), 4000));
+            await step.context.sendActivity("You will receive a mail once the URL is unblocked");
             return await step.prompt(CONFIRM_PROMPT, 'Do you want to try again?', ['yes', 'no'])
         }
     }
-
     async endStep(step) {
         if (step.result === true) {
             continueRes = true;
@@ -116,4 +95,4 @@ class CreateIncidentDialog extends ComponentDialog {
         return continueRes;
     }
 }
-module.exports.CreateIncidentDialog = CreateIncidentDialog;
+module.exports.UnblockURLDialog = UnblockURLDialog;
