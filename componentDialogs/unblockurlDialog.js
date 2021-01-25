@@ -62,10 +62,13 @@ class UnblockURLDialog extends ComponentDialog {
             var inc_id;
             await request.post(options, async (err, res, body) => {
                 let response = JSON.parse(body);
+                console.log(response)
                 inc_id = response.request['id'];
+                console.log(inc_id)
             });
             await new Promise(resolve => setTimeout(async () => resolve(
                 await step.context.sendActivity("Incident for unblocking url successfully created. Your incident id is : " + inc_id)
+                // console.log()
             ), 6000));
             await step.context.sendActivity("You will receive a mail once the URL is unblocked");
             return await step.prompt(CONFIRM_PROMPT, 'Do you want to try again?', ['yes', 'no'])
