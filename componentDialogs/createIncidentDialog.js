@@ -91,7 +91,7 @@ class CreateIncidentDialog extends ComponentDialog {
             });
             await new Promise(resolve => setTimeout(async () => resolve(
                 await step.context.sendActivity("Incident successfully created. Your incident id is : " + inc_id)
-            ), 4000));
+            ), 6000));
             return await step.prompt(CONFIRM_PROMPT, 'Do you want to try again?', ['yes', 'no'])
         }
     }

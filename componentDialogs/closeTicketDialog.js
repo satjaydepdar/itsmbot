@@ -93,7 +93,7 @@ class CloseTicketDialog extends ComponentDialog {
 			});
 			await new Promise(resolve => setTimeout(async () => resolve(
 				await step.context.sendActivity(message)
-			), 4000));
+			), 6000));
 			return await step.prompt(CONFIRM_PROMPT, 'Do you want to contiue using the ITSM bot?', ['yes', 'no'])
 		}
 	}
