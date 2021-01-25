@@ -61,6 +61,8 @@ class UnblockURLDialog extends ComponentDialog {
             };
             var inc_id;
             await request.post(options, async (err, res, body) => {
+                console.log(body)
+                console.log(res)
                 let response = JSON.parse(body);
                 console.log(response)
                 inc_id = response.request['id'];
