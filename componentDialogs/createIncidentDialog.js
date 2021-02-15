@@ -82,6 +82,8 @@ class CreateIncidentDialog extends ComponentDialog {
             };
             var inc_id;
             await request.post(options, async (err, res, body) => {
+                console.log(body)
+                console.log(res)
                 if (err) {
                     console.log(err)
                 } else {
