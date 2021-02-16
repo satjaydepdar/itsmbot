@@ -81,7 +81,7 @@ class CreateIncidentDialog extends ComponentDialog {
                 }
             };
             var inc_id;
-            for(var i - 0; i < 4; i++){
+         
             await request.post(options, async (err, res, body) => {
                 console.log(body)
                 console.log(res)
@@ -91,7 +91,7 @@ class CreateIncidentDialog extends ComponentDialog {
                     let response = JSON.parse(body);
                     inc_id = response.request['id'];
                 }
-            });}
+            });
             await new Promise(resolve => setTimeout(async () => resolve(
                 await step.context.sendActivity("Incident successfully created. Your incident id is : " + inc_id)
             ), 6000));
