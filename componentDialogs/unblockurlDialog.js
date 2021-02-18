@@ -9,8 +9,8 @@ const TEXT_PROMPT = 'TEXT_PROMPT';
 // const NUMBER_PROMPT    = 'NUMBER_PROMPT';
 // const DATETIME_PROMPT  = 'DATETIME_PROMPT';
 const WATERFALL_DIALOG = 'WATERFALL_DIALOG';
-var endDialog = '';
-var continueRes = '';
+var endDialog = false;
+var continueRes = false;
 var url = ""
 
 class UnblockURLDialog extends ComponentDialog {

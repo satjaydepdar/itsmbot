@@ -66,7 +66,7 @@ class ITSMbot extends ActivityHandler {
 		// Iterate over all new members added to the conversation.
 		for (const idx in activity.membersAdded) {
 			if (activity.membersAdded[idx].id !== activity.recipient.id) {
-				const welcomeMessage = `Welcome to ITSM Bot ${activity.membersAdded[idx].name}. `;
+				const welcomeMessage = `Hi. I am the Happiest Minds IT DigiBoT. How can I help you? You can type in your request or click on the options below. ${activity.membersAdded[idx].name}. `;
 				await turnContext.sendActivity(welcomeMessage);
 				await this.sendSuggestedActions(turnContext);
 			}
@@ -74,7 +74,12 @@ class ITSMbot extends ActivityHandler {
 	}
 
 	async sendSuggestedActions(turnContext) {
-		var reply = MessageFactory.suggestedActions(['Create Incident', 'Reset Password', 'Unlock Password', 'Close Ticket'], 'What would you like to do?');
+		var reply = MessageFactory.suggestedActions(['Create Ticket', 'Close Ticket', 'Reset Password', 'Unlock Password', 'UnBlock URL', 'Get Ticket Status', 'Provide Feedback']);
+		await turnContext.sendActivity(reply);
+	}
+
+	async feedback(turnContext) {
+		var reply = MessageFactory.suggestedActions(['Satisfied', 'Not Satisfied', 'Happy', 'Need to improve']);
 		await turnContext.sendActivity(reply);
 	}
 
@@ -99,7 +104,7 @@ class ITSMbot extends ActivityHandler {
 				context.activity.text = "Create_Incident"
 			} else if (intent == "Close_Ticket") {
 				context.activity.text = "Close_Ticket"
-			}else if (intent == "Unblock_URL") {
+			} else if (intent == "Unblock_URL") {
 				context.activity.text = "Unblock_URL"
 			}
 			currentIntent = context.activity.text;
@@ -112,11 +117,13 @@ class ITSMbot extends ActivityHandler {
 				await this.createIncidentDialog.run(context, this.dialogState);
 				conversationData.endDialog = await this.createIncidentDialog.isDialogComplete();
 				if (conversationData.endDialog) {
-					await this.previousIntent.set(context, {});
 					var continueVal = await this.createIncidentDialog.continueActions();
 					if (continueVal) {
 						await this.previousIntent.set(context, {});
 						await this.sendSuggestedActions(context);
+					} else {
+						await this.feedback(context);
+						await this.previousIntent.set(context, {});
 					}
 				}
 				break;
@@ -143,6 +150,9 @@ class ITSMbot extends ActivityHandler {
 					if (continueVal) {
 						await this.previousIntent.set(context, {});
 						await this.sendSuggestedActions(context);
+					} else {
+						await this.feedback(context);
+						await this.previousIntent.set(context, {});
 					}
 				}
 				break;
@@ -150,7 +160,7 @@ class ITSMbot extends ActivityHandler {
 			case 'Get_Status':
 				console.log("Inside Get Status Case");
 				await this.conversationData.set(context, { endDialog: false });
-				await this.getTicketStatusDialog.run(context, this.dialogState, entities.ticket_id);
+				await this.getTicketStatusDialog.run(context, this.dialogState);
 				conversationData.endDialog = await this.getTicketStatusDialog.isDialogComplete();
 				if (conversationData.endDialog) {
 					// Check if the user wants to continue. Trigger the proccess from here
@@ -159,6 +169,9 @@ class ITSMbot extends ActivityHandler {
 					if (continueVal) {
 						await this.previousIntent.set(context, {});
 						await this.sendSuggestedActions(context);
+					} else {
+						await this.feedback(context);
+						await this.previousIntent.set(context, {});
 					}
 				}
 				break;
@@ -175,25 +188,31 @@ class ITSMbot extends ActivityHandler {
 					if (continueVal) {
 						await this.previousIntent.set(context, {});
 						await this.sendSuggestedActions(context);
+					} else {
+						await this.feedback(context);
+						await this.previousIntent.set(context, {});
 					}
 				}
 				break;
 
-				case 'Unblock_URL':
-					console.log("Inside unblock url Case");
-					await this.conversationData.set(context, { endDialog: false });
-					await this.unblockurlDialog.run(context, this.dialogState, entities.blocked_url);
-					conversationData.endDialog = await this.unblockurlDialog.isDialogComplete();
-					if (conversationData.endDialog) {
-						// Check if the user wants to continue. Trigger the proccess from here
+			case 'Unblock_URL':
+				console.log("Inside unblock url Case");
+				await this.conversationData.set(context, { endDialog: false });
+				await this.unblockurlDialog.run(context, this.dialogState, entities.blocked_url);
+				conversationData.endDialog = await this.unblockurlDialog.isDialogComplete();
+				if (conversationData.endDialog) {
+					// Check if the user wants to continue. Trigger the proccess from here
+					await this.previousIntent.set(context, {});
+					var continueVal = await this.unblockurlDialog.continueActions();
+					if (continueVal) {
 						await this.previousIntent.set(context, {});
-						var continueVal = await this.unblockurlDialog.continueActions();
-						if (continueVal) {
-							await this.previousIntent.set(context, {});
-							await this.sendSuggestedActions(context);
-						}
+						await this.sendSuggestedActions(context);
+					} else {
+						await this.feedback(context);
+						await this.previousIntent.set(context, {});
 					}
-					break;
+				}
+				break;
 
 			default:
 				console.log("Did not match any case");

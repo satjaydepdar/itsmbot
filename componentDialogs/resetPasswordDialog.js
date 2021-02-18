@@ -1,21 +1,21 @@
-const {WaterfallDialog, ComponentDialog } = require('botbuilder-dialogs');
+const { WaterfallDialog, ComponentDialog } = require('botbuilder-dialogs');
 const request = require('request');
 const cmd = require('node-cmd');
 
-const {ConfirmPrompt, ChoicePrompt, DateTimePrompt, NumberPrompt, TextPrompt  } = require('botbuilder-dialogs');
-const {DialogSet, DialogTurnStatus } = require('botbuilder-dialogs');
+const { ConfirmPrompt, ChoicePrompt, DateTimePrompt, NumberPrompt, TextPrompt } = require('botbuilder-dialogs');
+const { DialogSet, DialogTurnStatus } = require('botbuilder-dialogs');
 const mysql = require('mysql');
 
-const CHOICE_PROMPT    = 'CHOICE_PROMPT';
-const CONFIRM_PROMPT   = 'CONFIRM_PROMPT';
-const TEXT_PROMPT      = 'TEXT_PROMPT';
+const CHOICE_PROMPT = 'CHOICE_PROMPT';
+const CONFIRM_PROMPT = 'CONFIRM_PROMPT';
+const TEXT_PROMPT = 'TEXT_PROMPT';
 const WATERFALL_DIALOG = 'WATERFALL_DIALOG';
-var endDialog ='';
-var continueRes ='';
+var endDialog = false;
+var continueRes = false;
 
 class ResetPasswordDialog extends ComponentDialog {
-	
-	constructor(conservsationState,userState) {
+
+	constructor(conservsationState, userState) {
 		// unlockPasswordDialogDialog is a dialog id for the class ResetPasswordDialog
 		super('resetPasswordDialog');
 
@@ -24,10 +24,8 @@ class ResetPasswordDialog extends ComponentDialog {
 		this.addDialog(new ConfirmPrompt(CONFIRM_PROMPT));
 
 		this.addDialog(new WaterfallDialog(WATERFALL_DIALOG, [
-			// this.firstStep.bind(this),  // Ask confirmation if user wants to unlock password?
 			this.getName.bind(this),    // Get name from user
 			this.getIssue.bind(this),  // Issue details of an incident
-			this.confirmStep.bind(this), // Show summary of values entered by user and ask confirmation to unlock password
 			this.summaryStep.bind(this),
 			this.endStep.bind(this)
 		]));
@@ -35,13 +33,13 @@ class ResetPasswordDialog extends ComponentDialog {
 		this.initialDialogId = WATERFALL_DIALOG;
 
 	}
-// accessor is used to access different properties under dialog state object
+	// accessor is used to access different properties under dialog state object
 	async run(turnContext, accessor) {
 		continueRes = false;
 		endDialog = false;
 		const dialogSet = new DialogSet(accessor);
 		dialogSet.add(this);
-	
+
 		const dialogContext = await dialogSet.createContext(turnContext);
 		const results = await dialogContext.continueDialog();
 		if (results.status === DialogTurnStatus.empty) {
@@ -49,58 +47,82 @@ class ResetPasswordDialog extends ComponentDialog {
 		}
 	}
 
-	async firstStep(step) {
-		endDialog = false;
-		return await step.prompt(CONFIRM_PROMPT, 'Confirm if you want to reset your password?', ['yes', 'no']);
-			  
+	async getName(step) {
+		return await step.prompt(TEXT_PROMPT, 'Sure. I will guide you through the process. In whose name would you like to create the ticket?');
 	}
-		
-	async getName(step){
-		return await step.prompt(TEXT_PROMPT, 'In what name incident for reset password is to be created?');	
-	}
-		
-	async getIssue(step){
+
+	async getIssue(step) {
 		step.values.name = step.result
-		return await step.prompt(TEXT_PROMPT, 'What is the issue with your password?');
+		return await step.prompt(TEXT_PROMPT, 'Sure. I will guide you through the process. Why do you want to reset your password?');
 	}
-		
-	async confirmStep(step){	
+
+	async summaryStep(step) {
 		step.values.issue = step.result
-		var msg = ` You have entered following values: \n Name: ${step.values.name}\n Issue: ${step.values.issue}`
-		await step.context.sendActivity(msg);
-		return step.prompt(CONFIRM_PROMPT, 'Are you sure that all values are correct and you want to reset your password?', ['yes', 'no']);
+		//Create	
+		// let options = {
+		// 	url: "https://dev-support.happiestminds.com/api/v3/requests/",
+		// 	headers: {
+		// 		"TECHNICIAN_KEY": "F3776882-8E92-432B-8FD3-C39A6E7CEB18",
+		// 		"Content-Type": "application/x-www-form-urlencoded"
+		// 	},
+		// 	form: {
+		// 		input_data: '{"request":{"subject":"' + step.values.issue + '","description":"' + step.values.issue + '","requester":{"name":' + step.values.name + '}}}'
+		// 	}
+		// };
+		// var inc_id;
+		// await request.post(options, async (err, res, body) => {
+		// 	console.log(body)
+		// 	if (err) {
+		// 		console.log(err)
+		// 	} else {
+		// 		let response = JSON.parse(body);
+		// 		inc_id = response.request['id'];
+		// 	}
+		// });
+		await new Promise(resolve => setTimeout(async () => resolve(
+			await step.context.sendActivity("Ok. Open the URL link https://passwordreset.microsoftonline.com/ and follow the instructions to reset your password.")
+		), 1000));
+		// await new Promise(resolve => setTimeout(async () => resolve(
+		// 	await step.context.sendActivity("Ok. A service request with ticket id " + inc_id + " is raised with a password reset request. Open the URL link https://passwordreset.microsoftonline.com/ and follow the instructions to reset your password.")
+		// ), 5000));
+		//Close
+		// let options1 = {
+		// 	url: "https://dev-support.happiestminds.com/api/v3/requests/" + inc_id + "/close",
+		// 	headers: {
+		// 		"TECHNICIAN_KEY": "F3776882-8E92-432B-8FD3-C39A6E7CEB18",
+		// 		"Content-Type": "application/x-www-form-urlencoded"
+		// 	},
+		// 	form: {
+		// 		input_data: '{"request": {"closure_info": {"requester_ack_resolution": true,"requester_ack_comments": "Password reset steps provided","closure_comments": "Password reset steps provided","closure_code": {"name": "success"}}}}'
+		// 	}
+		// };
+		// let message = ""
+		// await request.put(options1, async (err, res, body) => {
+		// });
+		return await step.prompt(CONFIRM_PROMPT, 'Anything else?', ['yes', 'no']);
 	}
-		
-	async summaryStep(step){
-		if(step.result===true){            
-			var msg = `${step.values.name} open the URL link https://passwordreset.microsoftonline.com/ and follow the instructions to reset your password.`
-			step.context.sendActivity(msg); 
-			return await step.prompt(CONFIRM_PROMPT, 'Do you want to continue using the chatbot?', ['yes', 'no']);
+	async endStep(step) {
+		if (step.result === true) {
+			continueRes = true;
+			endDialog = true;
+			return await step.endDialog();
+		} else {
+			var msg = `Thank you for reaching out. Pls share the feedback for this session.`
+			step.context.sendActivity(msg);
+			continueRes = false;
+			endDialog = true;
+			return await step.endDialog();
 		}
 	}
-		async endStep(step){
-			if(step.result===true)
-				{            
-					continueRes = true;
-					endDialog = true;
-					return await step.endDialog();                 
-				}else{
-					var msg = `${step.values.name}, Thank you for using ITSM bot`
-					step.context.sendActivity(msg);
-					continueRes = false;
-					endDialog = true;
-					return await step.endDialog();
-				}
-			}
 
 
-	async isDialogComplete(){
+	async isDialogComplete() {
 		return endDialog;
-		}
+	}
 
-	async continueActions(){
+	async continueActions() {
 		return continueRes;
-		}
+	}
 }
-		
-	module.exports.ResetPasswordDialog = ResetPasswordDialog;
+
+module.exports.ResetPasswordDialog = ResetPasswordDialog;

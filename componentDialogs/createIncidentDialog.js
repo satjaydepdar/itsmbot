@@ -6,11 +6,9 @@ const { DialogSet, DialogTurnStatus } = require('botbuilder-dialogs');
 const CHOICE_PROMPT = 'CHOICE_PROMPT';
 const CONFIRM_PROMPT = 'CONFIRM_PROMPT';
 const TEXT_PROMPT = 'TEXT_PROMPT';
-// const NUMBER_PROMPT    = 'NUMBER_PROMPT';
-// const DATETIME_PROMPT  = 'DATETIME_PROMPT';
 const WATERFALL_DIALOG = 'WATERFALL_DIALOG';
-var endDialog = '';
-var continueRes = '';
+var endDialog = false;
+var continueRes = false;
 
 class CreateIncidentDialog extends ComponentDialog {
 
@@ -21,10 +19,8 @@ class CreateIncidentDialog extends ComponentDialog {
         this.addDialog(new ConfirmPrompt(CONFIRM_PROMPT));
 
         this.addDialog(new WaterfallDialog(WATERFALL_DIALOG, [
-            // this.firstStep.bind(this),  // Ask confirmation if user wants to create incident request?
             this.getName.bind(this),    // Get name from user
             this.getIssue.bind(this),  // Issue details of an incident
-            this.confirmStep.bind(this), // Show summary of values entered by user and ask confirmation to create incident
             this.summaryStep.bind(this),
             this.endStep.bind(this)
         ]));
@@ -42,58 +38,40 @@ class CreateIncidentDialog extends ComponentDialog {
         }
     }
 
-    async firstStep(step) {
-        endDialog = false;
-        return await step.prompt(CONFIRM_PROMPT, 'Would you like to create an incident?', ['yes', 'no']);
-
-    }
-
     async getName(step) {
-        return await step.prompt(TEXT_PROMPT, 'In what name incident is to be created?');
+        return await step.prompt(TEXT_PROMPT, 'Sure. I will guide you through the process. In whose name would you like to create the ticket?');
     }
 
     async getIssue(step) {
         step.values.name = step.result
-        return await step.prompt(TEXT_PROMPT, 'Provide details of the issue you face?');
+        return await step.prompt(TEXT_PROMPT, 'Ok. ' + step.values.name + ' is a valid user in the system. What would you like to add in the body of the request?');
     }
 
-    async confirmStep(step) {
-        step.values.issue = step.result
-        var msg = ` You have entered following values: \n Name: ${step.values.name}\n Issue: ${step.values.issue}`
-        await step.context.sendActivity(msg);
-        return await step.prompt(CONFIRM_PROMPT, 'Are you sure that all values are correct and you want to create an incident?', ['yes', 'no']);
-    }
     async summaryStep(step) {
-        if (step.result === true) {
-            var username = "meapi";
-            var password = "admin@123";
-
-            var authenticationHeader = "Basic " + new Buffer(username + ":" + password).toString("base64");
-
-            let options = {
-                url: "https://dev-support.happiestminds.com/api/v3/requests/",
-                headers: {
-                    "TECHNICIAN_KEY": "F3776882-8E92-432B-8FD3-C39A6E7CEB18",
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                form: {
-                    input_data: '{"request":{"subject":"' + step.values.issue + '","description":"' + step.values.issue + '","requester":{"name":' + step.values.name + '}}}'
-                }
-            };
-            var inc_id;
-            await request.post(options, async (err, res, body) => {
-                if (err) {
-                    console.log(err)
-                } else {
-                    let response = JSON.parse(body);
-                    inc_id = response.request['id'];
-                }
-            });
-            await new Promise(resolve => setTimeout(async () => resolve(
-                await step.context.sendActivity("Incident successfully created. Your incident id is : " + inc_id)
-            ), 6000));
-            return await step.prompt(CONFIRM_PROMPT, 'Do you want to try again?', ['yes', 'no'])
-        }
+        let options = {
+            url: "https://dev-support.happiestminds.com/api/v3/requests/",
+            headers: {
+                "TECHNICIAN_KEY": "F3776882-8E92-432B-8FD3-C39A6E7CEB18",
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            form: {
+                input_data: '{"request":{"subject":"' + step.values.issue + '","description":"' + step.values.issue + '","requester":{"name":' + step.values.name + '}}}'
+            }
+        };
+        var inc_id;
+        await request.post(options, async (err, res, body) => {
+            console.log(body)
+            if (err) {
+                console.log(err)
+            } else {
+                let response = JSON.parse(body);
+                inc_id = response.request['id'];
+            }
+        });
+        await new Promise(resolve => setTimeout(async () => resolve(
+            await step.context.sendActivity("Ok. Your service request with ticket no " + inc_id + " is created.")
+        ), 6000));
+        return await step.prompt(CONFIRM_PROMPT, 'Anything else?', ['yes', 'no'])
     }
 
     async endStep(step) {
@@ -102,7 +80,7 @@ class CreateIncidentDialog extends ComponentDialog {
             endDialog = true;
             return await step.endDialog();
         } else {
-            var msg = `Thank you for using ITSM bot`
+            var msg = `Thank you for reaching out. Pls share the feedback for this session.`
             step.context.sendActivity(msg);
             continueRes = false;
             endDialog = true;
