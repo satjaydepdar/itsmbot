@@ -1,4 +1,5 @@
 const { WaterfallDialog, ComponentDialog } = require('botbuilder-dialogs');
+const { ActivityHandler, MessageFactory } = require('botbuilder');
 const { ConfirmPrompt, ChoicePrompt, DateTimePrompt, NumberPrompt, TextPrompt } = require('botbuilder-dialogs');
 const request = require('request');
 
@@ -83,9 +84,9 @@ class CloseTicketDialog extends ComponentDialog {
 			endDialog = true;
 			return await step.endDialog();
 		} else {
-			var msg = `Thank you for reaching out. Pls share the feedback for this session.`
-			step.context.sendActivity(msg);
-			continueRes = false;
+			var reply = MessageFactory.suggestedActions(['Satisfied', 'Not Satisfied', 'Happy', 'Need to improve'], "Thank you for reaching out. Pls share the feedback for this session. ");
+            await step.context.sendActivity(reply);
+            continueRes = false;
 			endDialog = true;
 			return await step.endDialog();
 		}

@@ -1,3 +1,4 @@
+const { ActivityHandler, MessageFactory } = require('botbuilder');
 const { WaterfallDialog, ComponentDialog } = require('botbuilder-dialogs');
 const request = require('request');
 const cmd = require('node-cmd');
@@ -102,13 +103,14 @@ class ResetPasswordDialog extends ComponentDialog {
 		return await step.prompt(CONFIRM_PROMPT, 'Anything else?', ['yes', 'no']);
 	}
 	async endStep(step) {
+		console.log(step.result)
 		if (step.result === true) {
 			continueRes = true;
 			endDialog = true;
 			return await step.endDialog();
 		} else {
-			var msg = `Thank you for reaching out. Pls share the feedback for this session.`
-			step.context.sendActivity(msg);
+			var reply = MessageFactory.suggestedActions(['Satisfied', 'Not Satisfied', 'Happy', 'Need to improve'], "Thank you for reaching out. Pls share the feedback for this session. ");
+			await step.context.sendActivity(reply);
 			continueRes = false;
 			endDialog = true;
 			return await step.endDialog();

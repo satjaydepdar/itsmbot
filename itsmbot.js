@@ -39,9 +39,7 @@ class ITSMbot extends ActivityHandler {
 		// See https://aka.ms/about-bot-activity-message to learn more about the message and other activity types.
 		this.onMessage(async (context, next) => {
 			const luisResult = await dispatchRecognizer.recognize(context)
-			console.log(luisResult)
 			const intent = LuisRecognizer.topIntent(luisResult);
-			console.log(intent)
 			const entities = luisResult.entities;
 			await this.dispatchToIntentAsync(context, intent, entities);
 			await next();
@@ -62,15 +60,10 @@ class ITSMbot extends ActivityHandler {
 
 	async sendWelcomeMessage(turnContext) {
 		const { activity } = turnContext;
-
 		// Iterate over all new members added to the conversation.
-		for (const idx in activity.membersAdded) {
-			if (activity.membersAdded[idx].id !== activity.recipient.id) {
-				const welcomeMessage = `Hi. I am the Happiest Minds IT DigiBoT. How can I help you? You can type in your request or click on the options below. ${activity.membersAdded[idx].name}. `;
-				await turnContext.sendActivity(welcomeMessage);
-				await this.sendSuggestedActions(turnContext);
-			}
-		}
+		const welcomeMessage = `Hi. I am the Happiest Minds IT DigiBoT. How can I help you? You can type in your request or click on the options below. `;
+		await turnContext.sendActivity(welcomeMessage);
+		await this.sendSuggestedActions(turnContext);
 	}
 
 	async sendSuggestedActions(turnContext) {
@@ -78,19 +71,24 @@ class ITSMbot extends ActivityHandler {
 		await turnContext.sendActivity(reply);
 	}
 
-	async feedback(turnContext) {
-		var reply = MessageFactory.suggestedActions(['Satisfied', 'Not Satisfied', 'Happy', 'Need to improve']);
-		await turnContext.sendActivity(reply);
-	}
+	// async feedback(turnContext) {
+	// 	var reply = MessageFactory.suggestedActions(['Satisfied', 'Not Satisfied', 'Happy', 'Need to improve']);
+	// 	await turnContext.sendActivity(reply);
+	// 	// const welcomeMessage = `Thanks for your feedback`;
+	// 	// await turnContext.sendActivity(welcomeMessage);
+	// }
 
 	async dispatchToIntentAsync(context, intent, entities) {
 
 		var currentIntent = '';
 		const previousIntent = await this.previousIntent.get(context, {});
 		const conversationData = await this.conversationData.get(context, {});
+		console.log(previousIntent)
 		if (previousIntent.intentName && conversationData.endDialog === false) {
 			currentIntent = previousIntent.intentName;
-
+			if (intent == "starter") {
+				currentIntent = "Greetings"
+			}
 		}
 		else if (previousIntent.intentName && conversationData.endDialog === true) {
 			currentIntent = context.activity.text;
@@ -111,8 +109,14 @@ class ITSMbot extends ActivityHandler {
 			await this.previousIntent.set(context, { intentName: context.activity.text });
 		}
 		switch (currentIntent) {
+			case 'Greetings':
+				console.log("Greetings");
+				await this.sendWelcomeMessage(context);
+				await this.previousIntent.set(context, { intentName: "" });
+				break;
 			case 'Create_Incident':
 				console.log("Inside Create Incident Case");
+				await this.previousIntent.set(context, { intentName: "Create_Incident" });
 				await this.conversationData.set(context, { endDialog: false });
 				await this.createIncidentDialog.run(context, this.dialogState);
 				conversationData.endDialog = await this.createIncidentDialog.isDialogComplete();
@@ -122,13 +126,13 @@ class ITSMbot extends ActivityHandler {
 						await this.previousIntent.set(context, {});
 						await this.sendSuggestedActions(context);
 					} else {
-						await this.feedback(context);
-						await this.previousIntent.set(context, {});
+							await this.previousIntent.set(context, {})
 					}
 				}
 				break;
 			case 'Unlock Password':
 				console.log("Inside Unlock Password Case");
+				await this.previousIntent.set(context, { intentName: "Unlock Password" });
 				await this.conversationData.set(context, { endDialog: false });
 				await this.unlockPasswordDialog.run(context, this.dialogState);
 				conversationData.endDialog = await this.unlockPasswordDialog.isDialogComplete();
@@ -140,6 +144,7 @@ class ITSMbot extends ActivityHandler {
 
 			case 'Reset_Password':
 				console.log("Inside Reset Password Case");
+				await this.previousIntent.set(context, { intentName: "Reset_Password" });
 				await this.conversationData.set(context, { endDialog: false });
 				await this.resetPasswordDialog.run(context, this.dialogState);
 				conversationData.endDialog = await this.resetPasswordDialog.isDialogComplete();
@@ -151,14 +156,14 @@ class ITSMbot extends ActivityHandler {
 						await this.previousIntent.set(context, {});
 						await this.sendSuggestedActions(context);
 					} else {
-						await this.feedback(context);
-						await this.previousIntent.set(context, {});
+							await this.previousIntent.set(context, {})
 					}
 				}
 				break;
 
 			case 'Get_Status':
 				console.log("Inside Get Status Case");
+				await this.previousIntent.set(context, { intentName: "Get_Status" });
 				await this.conversationData.set(context, { endDialog: false });
 				await this.getTicketStatusDialog.run(context, this.dialogState);
 				conversationData.endDialog = await this.getTicketStatusDialog.isDialogComplete();
@@ -170,7 +175,6 @@ class ITSMbot extends ActivityHandler {
 						await this.previousIntent.set(context, {});
 						await this.sendSuggestedActions(context);
 					} else {
-						await this.feedback(context);
 						await this.previousIntent.set(context, {});
 					}
 				}
@@ -178,6 +182,7 @@ class ITSMbot extends ActivityHandler {
 
 			case 'Close_Ticket':
 				console.log("Inside Close ticket Case");
+				await this.previousIntent.set(context, { intentName: "Close_Ticket" });
 				await this.conversationData.set(context, { endDialog: false });
 				await this.closeTicketDialog.run(context, this.dialogState, entities.ticket_id);
 				conversationData.endDialog = await this.closeTicketDialog.isDialogComplete();
@@ -189,7 +194,6 @@ class ITSMbot extends ActivityHandler {
 						await this.previousIntent.set(context, {});
 						await this.sendSuggestedActions(context);
 					} else {
-						await this.feedback(context);
 						await this.previousIntent.set(context, {});
 					}
 				}
@@ -197,6 +201,7 @@ class ITSMbot extends ActivityHandler {
 
 			case 'Unblock_URL':
 				console.log("Inside unblock url Case");
+				await this.previousIntent.set(context, { intentName: "Unblock_URL" });
 				await this.conversationData.set(context, { endDialog: false });
 				await this.unblockurlDialog.run(context, this.dialogState, entities.blocked_url);
 				conversationData.endDialog = await this.unblockurlDialog.isDialogComplete();
@@ -208,7 +213,6 @@ class ITSMbot extends ActivityHandler {
 						await this.previousIntent.set(context, {});
 						await this.sendSuggestedActions(context);
 					} else {
-						await this.feedback(context);
 						await this.previousIntent.set(context, {});
 					}
 				}
@@ -216,6 +220,7 @@ class ITSMbot extends ActivityHandler {
 
 			default:
 				console.log("Did not match any case");
+				// await this.sendWelcomeMessage(context);
 				break;
 		}
 	}
