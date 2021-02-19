@@ -42,6 +42,9 @@ this.initialDialogId = WATERFALL_DIALOG;
     }
 // accessor is used to access different properties under dialog state object
     async run(turnContext, accessor) {
+        var endDialog = false;
+var continueRes = false;
+
         const dialogSet = new DialogSet(accessor);
         dialogSet.add(this);
     

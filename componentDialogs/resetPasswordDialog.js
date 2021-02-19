@@ -54,7 +54,7 @@ class ResetPasswordDialog extends ComponentDialog {
 
 	async getIssue(step) {
 		step.values.name = step.result
-		return await step.prompt(TEXT_PROMPT, 'Sure. I will guide you through the process. Why do you want to reset your password?');
+		return await step.prompt(TEXT_PROMPT, 'Why do you want to reset your password?');
 	}
 
 	async summaryStep(step) {

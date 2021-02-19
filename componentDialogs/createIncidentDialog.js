@@ -14,6 +14,7 @@ var continueRes = false;
 class CreateIncidentDialog extends ComponentDialog {
 
     constructor(conservsationState, userState) {
+        
         super('createIncidentDialog');
         this.addDialog(new TextPrompt(TEXT_PROMPT));
         this.addDialog(new ChoicePrompt(CHOICE_PROMPT));
@@ -29,6 +30,8 @@ class CreateIncidentDialog extends ComponentDialog {
         this.initialDialogId = WATERFALL_DIALOG;
     }
     async run(turnContext, accessor) {
+        endDialog = false;
+        continueRes = false;
         const dialogSet = new DialogSet(accessor);
         dialogSet.add(this);
 
@@ -71,7 +74,7 @@ class CreateIncidentDialog extends ComponentDialog {
         });
         await new Promise(resolve => setTimeout(async () => resolve(
             await step.context.sendActivity("Ok. Your service request with ticket no " + inc_id + " is created.")
-        ), 6000));
+        ), 2000));
         return await step.prompt(CONFIRM_PROMPT, 'Anything else?', ['yes', 'no'])
     }
 

@@ -85,15 +85,20 @@ class ITSMbot extends ActivityHandler {
 		const conversationData = await this.conversationData.get(context, {});
 		console.log(previousIntent)
 		if (previousIntent.intentName && conversationData.endDialog === false) {
+			console.log("Here1")
 			currentIntent = previousIntent.intentName;
 			if (intent == "starter") {
 				currentIntent = "Greetings"
 			}
 		}
 		else if (previousIntent.intentName && conversationData.endDialog === true) {
+			console.log("Here2")
+
 			currentIntent = context.activity.text;
 		}
 		else {
+			console.log("Here3")
+
 			if (intent == "Get_Status") {
 				context.activity.text = "Get_Status"
 			} else if (intent == "Reset_Password") {
@@ -106,7 +111,8 @@ class ITSMbot extends ActivityHandler {
 				context.activity.text = "Unblock_URL"
 			}
 			currentIntent = context.activity.text;
-			await this.previousIntent.set(context, { intentName: context.activity.text });
+			previousIntent.intentName = context.activity.text;
+			// await this.previousIntent.set(context, { intentName: context.activity.text });
 		}
 		switch (currentIntent) {
 			case 'Greetings':
@@ -116,35 +122,36 @@ class ITSMbot extends ActivityHandler {
 				break;
 			case 'Create_Incident':
 				console.log("Inside Create Incident Case");
-				await this.previousIntent.set(context, { intentName: "Create_Incident" });
+				previousIntent.intentName = "Create_Incident"
 				await this.conversationData.set(context, { endDialog: false });
 				await this.createIncidentDialog.run(context, this.dialogState);
 				conversationData.endDialog = await this.createIncidentDialog.isDialogComplete();
+				console.log(conversationData.endDialog)
 				if (conversationData.endDialog) {
 					var continueVal = await this.createIncidentDialog.continueActions();
 					if (continueVal) {
-						await this.previousIntent.set(context, {});
 						await this.sendSuggestedActions(context);
-					} else {
-							await this.previousIntent.set(context, {})
 					}
+					await this.previousIntent.set(context, {});
 				}
 				break;
 			case 'Unlock Password':
 				console.log("Inside Unlock Password Case");
-				await this.previousIntent.set(context, { intentName: "Unlock Password" });
+				previousIntent.intentName = "Unlock Password"
 				await this.conversationData.set(context, { endDialog: false });
 				await this.unlockPasswordDialog.run(context, this.dialogState);
 				conversationData.endDialog = await this.unlockPasswordDialog.isDialogComplete();
 				if (conversationData.endDialog) {
-					await this.previousIntent.set(context, {});
+					// await this.previousIntent.set(context, {});
 					await this.sendSuggestedActions(context);
 				}
+				await this.previousIntent.set(context, {});
+
 				break;
 
 			case 'Reset_Password':
 				console.log("Inside Reset Password Case");
-				await this.previousIntent.set(context, { intentName: "Reset_Password" });
+				previousIntent.intentName = "Reset_Password"
 				await this.conversationData.set(context, { endDialog: false });
 				await this.resetPasswordDialog.run(context, this.dialogState);
 				conversationData.endDialog = await this.resetPasswordDialog.isDialogComplete();
@@ -153,17 +160,16 @@ class ITSMbot extends ActivityHandler {
 					await this.previousIntent.set(context, {});
 					var continueVal = await this.resetPasswordDialog.continueActions();
 					if (continueVal) {
-						await this.previousIntent.set(context, {});
+						// await this.previousIntent.set(context, {});
 						await this.sendSuggestedActions(context);
-					} else {
-							await this.previousIntent.set(context, {})
 					}
+					await this.previousIntent.set(context, {});
 				}
 				break;
 
 			case 'Get_Status':
 				console.log("Inside Get Status Case");
-				await this.previousIntent.set(context, { intentName: "Get_Status" });
+				previousIntent.intentName = "Get_Status"
 				await this.conversationData.set(context, { endDialog: false });
 				await this.getTicketStatusDialog.run(context, this.dialogState);
 				conversationData.endDialog = await this.getTicketStatusDialog.isDialogComplete();
@@ -172,17 +178,16 @@ class ITSMbot extends ActivityHandler {
 					await this.previousIntent.set(context, {});
 					var continueVal = await this.getTicketStatusDialog.continueActions();
 					if (continueVal) {
-						await this.previousIntent.set(context, {});
+						// await this.previousIntent.set(context, {});
 						await this.sendSuggestedActions(context);
-					} else {
-						await this.previousIntent.set(context, {});
 					}
+					await this.previousIntent.set(context, {});
 				}
 				break;
 
 			case 'Close_Ticket':
 				console.log("Inside Close ticket Case");
-				await this.previousIntent.set(context, { intentName: "Close_Ticket" });
+				previousIntent.intentName = "Close_Ticket"
 				await this.conversationData.set(context, { endDialog: false });
 				await this.closeTicketDialog.run(context, this.dialogState, entities.ticket_id);
 				conversationData.endDialog = await this.closeTicketDialog.isDialogComplete();
@@ -191,17 +196,16 @@ class ITSMbot extends ActivityHandler {
 					await this.previousIntent.set(context, {});
 					var continueVal = await this.closeTicketDialog.continueActions();
 					if (continueVal) {
-						await this.previousIntent.set(context, {});
+						// await this.previousIntent.set(context, {});
 						await this.sendSuggestedActions(context);
-					} else {
-						await this.previousIntent.set(context, {});
 					}
+					await this.previousIntent.set(context, {});
 				}
 				break;
 
 			case 'Unblock_URL':
 				console.log("Inside unblock url Case");
-				await this.previousIntent.set(context, { intentName: "Unblock_URL" });
+				previousIntent.intentName = "Unblock_URL"
 				await this.conversationData.set(context, { endDialog: false });
 				await this.unblockurlDialog.run(context, this.dialogState, entities.blocked_url);
 				conversationData.endDialog = await this.unblockurlDialog.isDialogComplete();
@@ -210,11 +214,10 @@ class ITSMbot extends ActivityHandler {
 					await this.previousIntent.set(context, {});
 					var continueVal = await this.unblockurlDialog.continueActions();
 					if (continueVal) {
-						await this.previousIntent.set(context, {});
+						// await this.previousIntent.set(context, {});
 						await this.sendSuggestedActions(context);
-					} else {
-						await this.previousIntent.set(context, {});
 					}
+					await this.previousIntent.set(context, {});
 				}
 				break;
 

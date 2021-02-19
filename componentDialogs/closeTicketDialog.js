@@ -29,6 +29,9 @@ class CloseTicketDialog extends ComponentDialog {
 		this.initialDialogId = WATERFALL_DIALOG;
 	}
 	async run(turnContext, accessor) {
+		endDialog = false;
+		continueRes = false;
+
 		const dialogSet = new DialogSet(accessor);
 		dialogSet.add(this);
 
@@ -74,7 +77,7 @@ class CloseTicketDialog extends ComponentDialog {
 		});
 		await new Promise(resolve => setTimeout(async () => resolve(
 			await step.context.sendActivity(message)
-		), 6000));
+		), 2000));
 		return await step.prompt(CONFIRM_PROMPT, 'Anything else?', ['yes', 'no'])
 	}
 

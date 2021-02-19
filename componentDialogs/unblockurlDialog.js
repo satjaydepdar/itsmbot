@@ -30,6 +30,9 @@ class UnblockURLDialog extends ComponentDialog {
         this.initialDialogId = WATERFALL_DIALOG;
     }
     async run(turnContext, accessor, blocked_url) {
+        endDialog = false;
+        continueRes = false;
+
         url = blocked_url
         const dialogSet = new DialogSet(accessor);
         dialogSet.add(this);

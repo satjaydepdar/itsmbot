@@ -72,7 +72,7 @@ class GetTicketStatusDialog extends ComponentDialog {
 		});
 		await new Promise(resolve => setTimeout(async () => resolve(
 			await step.context.sendActivity(ticketStatus)
-		), 6000));
+		), 2000));
 		return await step.prompt(CONFIRM_PROMPT, 'Anything else?', ['yes', 'no'])
 		// }
 	}
